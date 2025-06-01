@@ -131,8 +131,22 @@ func (t *topology) QueueBinding(b *QueueBindingDefinition) *topology {
 }
 
 // Apply declares all the exchanges, queues, and bindings defined in the topology.
-// It follows a specific order: exchanges first, then queues, then bindings.
-// Returns an error if any part of the topology cannot be applied.
+// It follows a specific order to ensure proper dependency resolution:
+//  1. Exchanges are declared first
+//  2. Queues are declared next (including any associated retry or DLQ queues)
+//  3. Queues are bound to exchanges
+//  4. Exchanges are bound to other exchanges
+//
+// This ordering ensures that all required resources exist before binding them together.
+// When declaring queues, any retry queues and dead-letter queues specified in the queue
+// definitions are automatically created with appropriate arguments for message routing.
+//
+// Returns the topology and an error if any part of the topology cannot be applied.
+// Common error cases include:
+//   - Channel is nil (NullableChannelError)
+//   - Exchange declaration failure (permission issues, invalid arguments)
+//   - Queue declaration failure (permission issues, invalid arguments)
+//   - Binding failure (non-existent queues or exchanges)
 func (t *topology) Apply() (*topology, error) {
 	if t.channel == nil {
 		return nil, NullableChannelError

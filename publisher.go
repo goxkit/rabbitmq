@@ -45,7 +45,17 @@ func (p *publisher) SimplePublish(ctx context.Context, target string, msg any) e
 	return p.publish(ctx, target, "", msg)
 }
 
-// Refactored Publish method to align with messaging.Publisher interface
+// Publish publishes a message to a specified exchange with optional routing key.
+// It aligns with the messaging.Publisher interface and handles tracing propagation.
+// Parameters:
+//   - ctx: Context for tracing and cancellation
+//   - to: Pointer to the target exchange name (required)
+//   - from: Pointer to source identifier (optional, not used)
+//   - key: Pointer to routing key (optional)
+//   - msg: The message to publish (will be marshaled to JSON)
+//   - options: Additional publishing options (optional)
+//
+// Returns an error if publishing fails or if the exchange name is empty.
 func (p *publisher) Publish(ctx context.Context, to, from, key *string, msg any, options ...*messaging.Option) error {
 	if to == nil || *to == "" {
 		return fmt.Errorf("exchange cannot be empty")
@@ -60,7 +70,17 @@ func (p *publisher) Publish(ctx context.Context, to, from, key *string, msg any,
 	return p.publish(ctx, exchange, routingKey, msg)
 }
 
-// Refactored PublishDeadline method to align with messaging.Publisher interface
+// PublishDeadline publishes a message to a specified exchange with a deadline.
+// It's similar to Publish but with an added timeout of 1 second.
+// Parameters:
+//   - ctx: Context for tracing and cancellation
+//   - to: Pointer to the target exchange name (required)
+//   - from: Pointer to source identifier (optional, not used)
+//   - key: Pointer to routing key (optional)
+//   - msg: The message to publish (will be marshaled to JSON)
+//   - options: Additional publishing options (optional)
+//
+// Returns an error if publishing fails, times out, or if the exchange name is empty.
 func (p *publisher) PublishDeadline(ctx context.Context, to, from, key *string, msg any, options ...*messaging.Option) error {
 	if to == nil || *to == "" {
 		return fmt.Errorf("exchange cannot be empty")
